@@ -5,7 +5,12 @@ A fullstack application for visualizing energy consumption and costs per charger
 ## Features
 
 - **Real-time Energy Monitoring**: Track hourly energy consumption for 10 chargers
-- **Cost Calculation**: Automatic calculation of costs using SE3 spot prices from Nord Pool
+- **Flexible Pricing Configuration**: 
+  - Use Nord Pool SE3 spot prices with configurable VAT and fixed costs
+  - Formula: Total Price = Spot Price × (1 + VAT%) + Fixed Cost per kWh
+  - Or use a fully fixed price to override spot pricing
+- **Cost Calculation**: Automatic calculation of costs with customizable pricing parameters
+- **Excel Export**: Export detailed cost data to Excel spreadsheets
 - **Interactive Dashboard**: Select chargers, date ranges, and view data in multiple formats
 - **Data Visualization**: Line and bar charts for energy consumption and costs
 - **Detailed Tables**: View hourly data with energy, prices, and calculated costs
@@ -18,6 +23,7 @@ A fullstack application for visualizing energy consumption and costs per charger
 - **PostgreSQL** database
 - **Easee API** integration for charger data
 - **Nord Pool API** integration for spot prices
+- **ExcelJS** for Excel file generation
 
 ### Frontend
 - **React** with Vite
@@ -223,14 +229,59 @@ The application will be available at `http://localhost:3000`
 - **GET** `/api/chargers` - List all chargers
 - **GET** `/api/chargers/:id/energy?from=&to=` - Get hourly energy data for a charger
 - **GET** `/api/chargers/:id/cost?from=&to=` - Get hourly cost data (energy + prices)
+- **GET** `/api/chargers/:id/cost/export?from=&to=` - Export cost data to Excel
 
 ### Prices
 
 - **GET** `/api/prices?from=&to=` - Get spot price time series
 
+### Settings
+
+- **GET** `/api/settings` - Get all settings
+- **GET** `/api/settings/pricing` - Get pricing configuration
+- **PUT** `/api/settings/pricing` - Update pricing configuration
+
 ### Health
 
 - **GET** `/api/health` - Health check endpoint
+
+## Pricing Configuration
+
+The application supports flexible pricing with two modes:
+
+### Mode 1: Spot Price + VAT + Fixed Cost (Default)
+
+```
+Total Price per kWh = Spot Price × (1 + VAT%) + Fixed Cost per kWh
+```
+
+**Example:**
+- Spot Price: 1.00 SEK/kWh
+- VAT: 25%
+- Fixed Cost: 0.50 SEK/kWh
+- **Total: 1.00 × 1.25 + 0.50 = 1.75 SEK/kWh**
+
+### Mode 2: Fully Fixed Price
+
+Use a single fixed price that overrides all spot pricing calculations.
+
+### Configuring Pricing
+
+Use the Pricing Settings panel in the UI or update via API:
+
+```bash
+# Get current pricing configuration
+curl http://localhost:3001/api/settings/pricing
+
+# Update pricing configuration
+curl -X PUT http://localhost:3001/api/settings/pricing \
+  -H "Content-Type: application/json" \
+  -d '{
+    "useFixedPrice": false,
+    "vatPercentage": 25,
+    "fixedCostSEKPerKwh": 0.50
+  }'
+```
 
 ### Example API Calls
 
@@ -265,6 +316,18 @@ curl "http://localhost:3001/api/prices?from=2026-01-01T00:00:00Z&to=2026-01-07T2
 - `ts` (TIMESTAMPTZ, PRIMARY KEY) - Timestamp of the price
 - `price_sek_per_kwh` (NUMERIC) - Price in SEK per kWh
 
+### settings
+- `key` (TEXT, PRIMARY KEY) - Setting key
+- `value` (TEXT) - Setting value
+- `description` (TEXT) - Setting description
+- `updated_at` (TIMESTAMPTZ) - Last update timestamp
+
+Default settings:
+- `use_fixed_price`: Whether to use fixed price mode
+- `fixed_price_sek_per_kwh`: Fixed price when in fixed price mode
+- `vat_percentage`: VAT percentage applied to spot prices
+- `fixed_cost_sek_per_kwh`: Fixed cost added on top of spot price and VAT
+
 ## Data Sources
 
 ### Easee API
@@ -292,6 +355,44 @@ The backend includes a cron job that runs every 30 minutes (at :00 and :30) to:
 3. Update the database with new data
 
 The data update covers the last 7 days to ensure recent data is always available.
+
+## Excel Export
+
+The application supports exporting cost data to Excel format with detailed breakdown:
+
+### Export Features
+
+- **Comprehensive Data**: Includes timestamp, energy consumption, spot prices, VAT, fixed costs, and total costs
+- **Summary Row**: Total energy consumption and costs
+- **Pricing Information**: Header includes the pricing configuration used
+- **Formatted Columns**: Properly formatted numbers with appropriate decimal places
+
+### Using Excel Export
+
+**From the UI:**
+1. Select a charger and date range
+2. Click the "📊 Export to Excel" button
+3. The file will download automatically
+
+**Via API:**
+```bash
+curl "http://localhost:3001/api/chargers/EH001/cost/export?from=2026-01-01T00:00:00Z&to=2026-01-07T23:59:59Z" \
+  -o energy-costs.xlsx
+```
+
+The exported Excel file includes:
+- Title with charger name and ID
+- Date range
+- Pricing configuration details
+- Hourly breakdown with:
+  - Timestamp
+  - Energy (kWh)
+  - Spot Price (SEK/kWh)
+  - VAT amount
+  - Fixed Cost
+  - Total Price (SEK/kWh)
+  - Total Cost (SEK)
+- Summary row with totals
 
 ## Security Considerations
 
