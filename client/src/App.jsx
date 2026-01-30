@@ -4,6 +4,8 @@ import DateRangePicker from './components/DateRangePicker';
 import EnergyChart from './components/EnergyChart';
 import CostSummary from './components/CostSummary';
 import DataTable from './components/DataTable';
+import PricingSettings from './components/PricingSettings';
+import ExportButton from './components/ExportButton';
 import { getChargers, getCostData } from './api';
 import './App.css';
 
@@ -20,6 +22,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [chartType, setChartType] = useState('line');
+  const [showSettings, setShowSettings] = useState(false);
 
   // Load chargers on mount
   useEffect(() => {
@@ -67,6 +70,11 @@ function App() {
     }
   };
 
+  const handlePricingUpdate = () => {
+    // Reload data when pricing settings change
+    loadData();
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -75,6 +83,16 @@ function App() {
       </header>
 
       <main className="app-main">
+        <div className="settings-toggle">
+          <button onClick={() => setShowSettings(!showSettings)} className="btn-settings">
+            ⚙️ {showSettings ? 'Hide' : 'Show'} Pricing Settings
+          </button>
+        </div>
+
+        {showSettings && (
+          <PricingSettings onUpdate={handlePricingUpdate} />
+        )}
+
         <div className="controls">
           <ChargerSelector
             chargers={chargers}
@@ -97,6 +115,12 @@ function App() {
           <button onClick={loadData} disabled={loading || !selectedCharger}>
             {loading ? 'Loading...' : 'Refresh Data'}
           </button>
+          <ExportButton
+            chargerId={selectedCharger}
+            fromDate={fromDate}
+            toDate={toDate}
+            disabled={loading || !selectedCharger || !costData}
+          />
         </div>
 
         {error && <div className="error-message">{error}</div>}

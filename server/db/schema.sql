@@ -26,6 +26,14 @@ CREATE TABLE spotprices (
     price_sek_per_kwh NUMERIC NOT NULL
 );
 
+-- Create settings table for fixed costs and other configuration
+CREATE TABLE settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create indices for better query performance
 CREATE INDEX idx_hourly_energy_charger_ts ON hourly_energy(charger_id, ts);
 CREATE INDEX idx_hourly_energy_ts ON hourly_energy(ts);
@@ -43,6 +51,13 @@ INSERT INTO chargers (id, name) VALUES
     ('EH008', 'Charger 8'),
     ('EH009', 'Charger 9'),
     ('EH010', 'Charger 10');
+
+-- Initialize default settings
+INSERT INTO settings (key, value, description) VALUES 
+    ('use_fixed_price', 'false', 'Whether to use fixed price instead of spot prices'),
+    ('fixed_price_sek_per_kwh', '0', 'Fixed price in SEK per kWh when use_fixed_price is true (overrides all other pricing)'),
+    ('vat_percentage', '25', 'VAT percentage applied to spot prices (e.g., 25 for 25%)'),
+    ('fixed_cost_sek_per_kwh', '0', 'Fixed cost per kWh added on top of spot price and VAT (e.g., grid fees, markup)');
 
 -- Grant necessary permissions (adjust as needed)
 -- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_db_user;

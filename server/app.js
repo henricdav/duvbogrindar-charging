@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cron from 'node-cron';
 import chargersRouter from './routes/chargers.js';
 import pricesRouter from './routes/prices.js';
+import settingsRouter from './routes/settings.js';
 import energyService from './services/energyService.js';
 import priceService from './services/priceService.js';
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/chargers', chargersRouter);
 app.use('/api/prices', pricesRouter);
+app.use('/api/settings', settingsRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -42,7 +44,10 @@ app.get('/', (req, res) => {
       chargers: '/api/chargers',
       energy: '/api/chargers/:id/energy?from=&to=',
       cost: '/api/chargers/:id/cost?from=&to=',
-      prices: '/api/prices?from=&to='
+      costExport: '/api/chargers/:id/cost/export?from=&to=',
+      prices: '/api/prices?from=&to=',
+      settings: '/api/settings',
+      pricingConfig: '/api/settings/pricing'
     }
   });
 });
