@@ -71,14 +71,54 @@ project/
 
 ## Installation
 
-### 1. Clone the Repository
+### Quick Start with Docker (Recommended)
+
+The easiest way to get started is using Docker Compose:
+
+```bash
+# Clone the repository
+git clone https://github.com/henricdav/duvbogrindar-charging.git
+cd duvbogrindar-charging
+
+# Create .env file with your Easee credentials
+cp .env.example .env
+# Edit .env with your EASEE_USERNAME and EASEE_PASSWORD
+
+# Start all services
+docker-compose up -d
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:3001
+```
+
+The Docker setup includes:
+- PostgreSQL database with automatic schema initialization
+- Backend Express server
+- Frontend React development server
+
+### Manual Installation
+
+If you prefer to run services manually:
+
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/henricdav/duvbogrindar-charging.git
 cd duvbogrindar-charging
 ```
 
-### 2. Database Setup
+#### Quick Setup Script
+
+Run the automated setup script:
+
+```bash
+./setup.sh
+```
+
+Or follow the manual steps below:
+
+#### 2. Database Setup
 
 Create a PostgreSQL database:
 
@@ -97,7 +137,7 @@ This will:
 - Add indices for query optimization
 - Seed 10 chargers (EH001 through EH010)
 
-### 3. Backend Setup
+#### 3. Backend Setup
 
 Navigate to the server directory:
 
@@ -132,7 +172,7 @@ PORT=3001
 NODE_ENV=development
 ```
 
-### 4. Frontend Setup
+#### 4. Frontend Setup
 
 Navigate to the client directory:
 
