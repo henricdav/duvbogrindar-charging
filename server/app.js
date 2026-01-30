@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
+import rateLimit from 'express-rate-limit';
 import chargersRouter from './routes/chargers.js';
 import pricesRouter from './routes/prices.js';
 import settingsRouter from './routes/settings.js';
@@ -13,6 +14,18 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all API routes
+app.use('/api/', limiter);
 
 // Middleware
 app.use(cors());
