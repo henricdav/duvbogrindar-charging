@@ -31,7 +31,7 @@
   "crons": [
     {
       "path": "/api/cron/update-data",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }

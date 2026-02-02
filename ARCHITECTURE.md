@@ -57,7 +57,7 @@
 ## Background Jobs
 
 ```
-Every 30 minutes:
+Daily at 2 AM:
 ┌─────────────────────────────────────────┐
 │  Cron Job (Automated Data Update)      │
 └─────────────────────────────────────────┘

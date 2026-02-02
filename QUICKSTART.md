@@ -155,7 +155,7 @@ kill -9 <PID>
 - Wait 5 seconds after backend starts (initial data fetch)
 - Check backend logs for API errors
 - Verify Easee credentials are correct
-- Data fetches every 30 minutes automatically
+- Data fetches daily at 2 AM automatically
 
 ---
 

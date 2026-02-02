@@ -148,13 +148,13 @@ After deployment:
 
 ## Automated Data Updates
 
-The application uses Vercel Cron Jobs for automated data updates every 30 minutes. This is configured in `vercel.json`:
+The application uses Vercel Cron Jobs for automated data updates daily at 2 AM. This is configured in `vercel.json`:
 
 ```json
 "crons": [
   {
     "path": "/api/cron/update-data",
-    "schedule": "*/30 * * * *"
+    "schedule": "0 2 * * *"
   }
 ]
 ```

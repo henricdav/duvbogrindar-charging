@@ -74,11 +74,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Cron job to update energy and price data every 30 minutes
-// This runs at 00 and 30 minutes past every hour
+// Cron job to update energy and price data daily at 2 AM
+// This runs at 2:00 AM every day
 // Note: Cron jobs don't work in Vercel serverless. Use Vercel Cron Jobs instead.
 // See: https://vercel.com/docs/cron-jobs
-cron.schedule('0,30 * * * *', async () => {
+cron.schedule('0 2 * * *', async () => {
   console.log('Running scheduled data update...');
   
   try {
@@ -106,7 +106,7 @@ if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('Cron job scheduled: Data updates every 30 minutes');
+    console.log('Cron job scheduled: Data updates daily at 2 AM');
     
     // Perform initial data fetch on startup
     setTimeout(async () => {

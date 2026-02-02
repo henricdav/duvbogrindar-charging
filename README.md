@@ -36,7 +36,7 @@ cp .env.example .env
 - **Interactive Dashboard**: Select chargers, date ranges, and view data in multiple formats
 - **Data Visualization**: Line and bar charts for energy consumption and costs
 - **Detailed Tables**: View hourly data with energy, prices, and calculated costs
-- **Automated Data Updates**: Background cron jobs fetch data every 30 minutes
+- **Automated Data Updates**: Background cron jobs fetch data daily at 2 AM
 
 ## Technology Stack
 
@@ -232,7 +232,7 @@ npm run dev
 
 The server will start on `http://localhost:3001`
 
-Initial data fetch will occur 5 seconds after startup, then every 30 minutes automatically.
+Initial data fetch will occur 5 seconds after startup, then daily at 2 AM automatically.
 
 ### Start the Frontend Development Server
 
@@ -371,7 +371,7 @@ Spot prices are fetched from Nord Pool:
 
 ## Automated Data Updates
 
-The backend includes a cron job that runs every 30 minutes (at :00 and :30) to:
+The backend includes a cron job that runs daily at 2 AM to:
 1. Fetch latest spot prices from Nord Pool
 2. Fetch energy data for all chargers from Easee API
 3. Update the database with new data
