@@ -4,8 +4,6 @@
   "outputDirectory": "client/dist",
   "installCommand": "npm install --prefix client && npm install --prefix server",
   "rewrites": [
-    // Note: Order matters! More specific routes must come first.
-    // Vercel processes rewrites sequentially and uses the first match.
     {
       "source": "/api/chargers/:id/cost/export",
       "destination": "/api/chargers/[id].js"

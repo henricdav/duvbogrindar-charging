@@ -268,7 +268,7 @@ Vercel uses the `rewrites` in `vercel.json` to route requests to the appropriate
 ]
 ```
 
-The order matters - more specific routes should come first.
+**Important:** The order of rewrites matters! Vercel processes them sequentially and uses the first match. More specific routes (like `/api/chargers/:id/cost/export`) must come before less specific ones (like `/api/chargers/:id/cost`).
 
 ## Local Development
 
