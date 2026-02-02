@@ -5,8 +5,36 @@
   "installCommand": "npm install --prefix client && npm install --prefix server",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/api/chargers/:id/cost/export",
+      "destination": "/api/chargers/[id].js"
+    },
+    {
+      "source": "/api/chargers/:id/cost",
+      "destination": "/api/chargers/[id].js"
+    },
+    {
+      "source": "/api/chargers/:id/energy",
+      "destination": "/api/chargers/[id].js"
+    },
+    {
+      "source": "/api/chargers",
+      "destination": "/api/chargers/index.js"
+    },
+    {
+      "source": "/api/prices",
+      "destination": "/api/prices/index.js"
+    },
+    {
+      "source": "/api/settings/pricing",
+      "destination": "/api/settings/index.js"
+    },
+    {
+      "source": "/api/settings",
+      "destination": "/api/settings/index.js"
+    },
+    {
+      "source": "/api/cron/update-data",
+      "destination": "/api/cron/update-data.js"
     }
   ],
   "crons": [
