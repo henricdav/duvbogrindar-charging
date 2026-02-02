@@ -353,6 +353,12 @@ npm run dev
 - Configured for `Access-Control-Allow-Origin: *`
 - Adjust in individual function files if needed
 
+### 7. **Proxy Configuration**
+- The Express app has `trust proxy` enabled for Vercel deployment
+- This allows rate limiting to work correctly behind Vercel's proxy
+- Required for express-rate-limit to identify client IPs from `X-Forwarded-For` header
+- Configured in `server/app.js` with `app.set('trust proxy', true)`
+
 ## Troubleshooting
 
 ### Issue: API calls failing
@@ -407,6 +413,19 @@ VITE_API_URL=/api
 1. Check that serverless functions include CORS headers
 2. Verify `VITE_API_URL` is set to `/api` (same domain)
 3. For custom domains, update CORS origin in function files
+
+### Issue: express-rate-limit ValidationError about X-Forwarded-For
+
+**Error Message:**
+```
+ValidationError: The 'X-Forwarded-For' header is set but the Express 'trust proxy' setting is false
+```
+
+**Solution**:
+1. This is already fixed in `server/app.js` with `app.set('trust proxy', true)`
+2. Vercel sets the `X-Forwarded-For` header as it proxies requests
+3. Express must trust this header for rate limiting to work correctly
+4. If you see this error, ensure your Express app includes the trust proxy setting
 
 ## Cost Considerations
 
