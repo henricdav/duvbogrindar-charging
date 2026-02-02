@@ -53,6 +53,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Test IP endpoint - validates trust proxy configuration
+// Returns the client's IP address as detected by Express
+app.get('/api/test-ip', (req, res) => {
+  res.json({ 
+    ip: req.ip,
+    ips: req.ips,
+    headers: {
+      'x-forwarded-for': req.get('x-forwarded-for'),
+      'x-real-ip': req.get('x-real-ip')
+    }
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -60,6 +73,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
+      testIp: '/api/test-ip',
       chargers: '/api/chargers',
       energy: '/api/chargers/:id/energy?from=&to=',
       cost: '/api/chargers/:id/cost?from=&to=',

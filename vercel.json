@@ -33,6 +33,10 @@
       "destination": "/api/settings/index.js"
     },
     {
+      "source": "/api/test-ip",
+      "destination": "/api/test-ip.js"
+    },
+    {
       "source": "/api/cron/update-data",
       "destination": "/api/cron/update-data.js"
     }

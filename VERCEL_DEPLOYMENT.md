@@ -145,7 +145,7 @@ VITE_API_URL=/api
 
 This makes the frontend call the API at the same domain (e.g., `yourapp.vercel.app/api`).
 
-### 5. Verify Deployment
+### 4. Verify Deployment
 
 After deployment:
 
@@ -155,10 +155,26 @@ After deployment:
    ```
    Should return: Array of charger objects
 
-2. **Test Frontend**:
+2. **Test Trust Proxy Configuration**:
+   ```bash
+   curl https://your-app.vercel.app/api/test-ip
+   ```
+   Should return your client IP address and headers:
+   ```json
+   {
+     "ip": "123.45.67.89",
+     "headers": {
+       "x-forwarded-for": "123.45.67.89",
+       "x-real-ip": "123.45.67.89"
+     },
+     "note": "This endpoint validates that trust proxy is working correctly"
+   }
+   ```
+
+3. **Test Frontend**:
    Open `https://your-app.vercel.app` in your browser
 
-3. **Trigger Initial Data Update**:
+4. **Trigger Initial Data Update**:
    ```bash
    curl -X POST https://your-app.vercel.app/api/cron/update-data
    ```
