@@ -2,6 +2,26 @@
 
 A fullstack application for visualizing energy consumption and costs per charger for BRF Duvbo Grindar housing association.
 
+## 🚀 Quick Start
+
+**Want to run the application immediately?** See **[QUICKSTART.md](QUICKSTART.md)** for a 5-minute setup guide!
+
+**TL;DR (with Docker):**
+```bash
+cp .env.example .env
+# Edit .env with your Easee credentials
+./run.sh
+# Open http://localhost:3000
+```
+
+## 📚 Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in 5 minutes
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and workflows
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
+
+---
+
 ## Features
 
 - **Real-time Energy Monitoring**: Track hourly energy consumption for 10 chargers
