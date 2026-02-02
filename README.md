@@ -35,7 +35,7 @@ cp .env.example .env
 
 - **Real-time Energy Monitoring**: Track hourly energy consumption for 10 chargers
 - **Flexible Pricing Configuration**: 
-  - Use Nord Pool SE3 spot prices with configurable VAT and fixed costs
+  - Use Swedish electricity spot prices (SE3 - Stockholm area) with configurable VAT and fixed costs
   - Formula: Total Price = Spot Price × (1 + VAT%) + Fixed Cost per kWh
   - Or use a fully fixed price to override spot pricing
 - **Cost Calculation**: Automatic calculation of costs with customizable pricing parameters
@@ -53,7 +53,7 @@ cp .env.example .env
 - **Node.js** with shared service layer
 - **PostgreSQL** database with SSL (Neon recommended)
 - **Easee API** integration for charger data
-- **Nord Pool API** integration for spot prices
+- **elprisetjustnu.se API** integration for Swedish electricity spot prices (SE3 area)
 - **ExcelJS** for Excel file generation
 
 ### Frontend
@@ -78,7 +78,7 @@ project/
 │   ├── services/
 │   │   ├── easeeService.js   # Easee API authentication and data fetching
 │   │   ├── energyService.js  # Energy data management
-│   │   └── priceService.js   # Nord Pool price integration
+│   │   └── priceService.js   # Electricity price integration (elprisetjustnu.se)
 │   └── db/
 │       ├── db.js        # PostgreSQL connection
 │       └── schema.sql   # Database schema and seed data
@@ -370,18 +370,20 @@ The application uses Easee API to fetch charger data:
 - **Token Management**: Automatic refresh with ~1 hour expiry
 - **Data**: Hourly energy consumption in kWh
 
-### Nord Pool API
+### Electricity Price API (elprisetjustnu.se)
 
-Spot prices are fetched from Nord Pool:
+Swedish electricity spot prices are fetched from the free and open elprisetjustnu.se API:
 
-- **Endpoint**: `https://www.nordpoolgroup.com/api/marketdata/page/10`
-- **Parameters**: `currency=SEK`, `area=SE3`
-- **Data**: Hourly spot prices, converted from SEK/MWh to SEK/kWh
+- **Endpoint**: `https://www.elprisetjustnu.se/api/v1/prices/[ÅR]/[MÅNAD]-[DAG]_[PRISKLASS].json`
+- **Area**: SE3 (Stockholm / Södra Mellansverige)
+- **Data Format**: Static JSON file with hourly prices in SEK/kWh
+- **Example**: `https://www.elprisetjustnu.se/api/v1/prices/2024/01-15_SE3.json`
+- **Availability**: Today's prices always available, tomorrow's prices available after ~13:00
 
 ## Automated Data Updates
 
 The backend includes a cron job that runs daily at 2 AM to:
-1. Fetch latest spot prices from Nord Pool
+1. Fetch latest spot prices from elprisetjustnu.se (today and tomorrow)
 2. Fetch energy data for all chargers from Easee API
 3. Update the database with new data
 

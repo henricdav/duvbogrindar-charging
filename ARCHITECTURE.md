@@ -24,10 +24,10 @@
 │ (Chargers)  │                                   │ localhost:  │
 └─────────────┘                                   │    3000     │
                                                   └─────────────┘
-┌─────────────┐
-│ Nord Pool   │
-│ (Prices)    │
-└─────────────┘
+┌──────────────────┐
+│ elprisetjustnu.se│
+│ (Spot Prices)    │
+└──────────────────┘
 ```
 
 ## Data Flow
@@ -43,7 +43,7 @@
    │
    ├── Charger info (10 chargers: EH001-EH010)
    ├── Energy data (hourly consumption)
-   ├── Spot prices (from Nord Pool)
+   ├── Spot prices (from elprisetjustnu.se)
    └── Settings (pricing configuration)
    ↓
 5. Frontend displays:
@@ -62,7 +62,7 @@ Daily at 2 AM:
 │  Cron Job (Automated Data Update)      │
 └─────────────────────────────────────────┘
                 │
-                ├─▶ Fetch spot prices from Nord Pool
+                ├─▶ Fetch spot prices from elprisetjustnu.se
                 │   └─▶ Store in database (spotprices table)
                 │
                 └─▶ Fetch energy data from Easee API
@@ -112,7 +112,7 @@ Mode 1: Spot Price Mode (Default)
 │ Total Price = Spot Price × (1 + VAT%) + Fixed Cost  │
 └──────────────────────────────────────────────────────┘
                      │
-                     ├─▶ Spot Price: From Nord Pool (SE3)
+                     ├─▶ Spot Price: From elprisetjustnu.se (SE3)
                      ├─▶ VAT: Configurable % (default 25%)
                      └─▶ Fixed Cost: Per kWh (grid fees, etc.)
 
