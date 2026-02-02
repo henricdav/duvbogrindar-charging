@@ -290,9 +290,11 @@ VITE_API_URL=/api
   - 60-second function timeout
 
 ### Database Costs
-- **Vercel Postgres**: Starts at $0.24/GB
-- **Neon**: Free tier available, paid plans start at $19/month
-- **Supabase**: Free tier available, paid plans start at $25/month
+- **Vercel Postgres**: Starts at $0.24/GB per month for storage (see [Vercel Postgres Pricing](https://vercel.com/docs/storage/vercel-postgres/usage-and-pricing))
+- **Neon**: Free tier available, paid plans start at $19/month (see [Neon Pricing](https://neon.tech/pricing))
+- **Supabase**: Free tier available, paid plans start at $25/month (see [Supabase Pricing](https://supabase.com/pricing))
+
+**Note**: Pricing is subject to change. Check provider websites for current rates.
 
 ## Environment Variables Reference
 

@@ -8,7 +8,7 @@ const router = express.Router();
 // POST /api/cron/update-data
 router.post('/update-data', async (req, res) => {
   try {
-    console.log('Manual data update triggered...');
+    console.log('Scheduled/manual data update triggered...');
     
     // Fetch data for the last 7 days
     const toDate = new Date();
@@ -23,7 +23,7 @@ router.post('/update-data', async (req, res) => {
     console.log('Updating energy data...');
     await energyService.fetchAllChargersEnergy(fromDate, toDate);
 
-    console.log('Manual data update completed successfully');
+    console.log('Scheduled/manual data update completed successfully');
     
     res.json({ 
       success: true, 
@@ -31,7 +31,7 @@ router.post('/update-data', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error during manual data update:', error.message);
+    console.error('Error during scheduled/manual data update:', error.message);
     res.status(500).json({ 
       success: false, 
       error: 'Data update failed',
