@@ -1,0 +1,24 @@
+{
+  "name": "duvbogrindar-charging-server",
+  "version": "1.0.0",
+  "description": "Backend server for BRF Duvbo Grindar charging portal",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "node-cron": "^3.0.3",
+    "exceljs": "^4.4.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
