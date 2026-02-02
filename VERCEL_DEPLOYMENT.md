@@ -1,52 +1,73 @@
 # Vercel Deployment Guide
 
-This guide explains how to deploy the Duvbo Grindar Charging Portal to Vercel.
+This guide explains how to deploy the Duvbo Grindar Charging Portal to Vercel as a fully serverless application.
 
 ## Overview
 
-The application has been configured to work on Vercel with the following architecture:
-- **Frontend**: React + Vite served as static files
-- **Backend**: Express API running as Vercel serverless functions
-- **Database**: External PostgreSQL (Vercel Postgres recommended)
-- **Scheduled Tasks**: Vercel Cron Jobs for data updates
+The application is configured to run completely on Vercel with the following architecture:
+- **Frontend**: React + Vite served as static files from `client/dist`
+- **Backend**: Individual serverless functions in the `api/` directory (no Express server)
+- **Database**: External PostgreSQL with SSL (Neon or Vercel Postgres recommended)
+- **Scheduled Tasks**: Vercel Cron Jobs for automated data updates
+
+## Architecture
+
+### Serverless API Structure
+
+The backend has been refactored into individual serverless functions:
+
+```
+api/
+├── chargers/
+│   ├── index.js          # GET /api/chargers - List all chargers
+│   └── [id].js          # GET /api/chargers/:id/energy, /cost, /cost/export
+├── prices/
+│   └── index.js         # GET /api/prices - Get spot prices
+├── settings/
+│   └── index.js         # GET/PUT /api/settings, /api/settings/pricing
+└── cron/
+    └── update-data.js   # POST /api/cron/update-data - Data update endpoint
+```
+
+Each function is independent and handles its own CORS, validation, and database access through shared services in `server/services/`.
 
 ## Prerequisites
 
 1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-2. **PostgreSQL Database**: You'll need an external PostgreSQL database. Options:
-   - [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) (Recommended)
-   - [Neon](https://neon.tech/)
+2. **PostgreSQL Database**: External PostgreSQL with SSL support. Options:
+   - [Neon](https://neon.tech/) - **Recommended** (serverless PostgreSQL with excellent cold-start performance)
+   - [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres)
    - [Supabase](https://supabase.com/)
    - [Railway](https://railway.app/)
-   - Any other PostgreSQL hosting service
 3. **Easee API Credentials**: Your Easee username and password
 
 ## Deployment Steps
 
 ### 1. Set Up Database
 
-#### Option A: Using Vercel Postgres (Recommended)
+#### Option A: Using Neon (Recommended for Serverless)
 
-1. Go to your Vercel dashboard
-2. Navigate to Storage → Create Database → Postgres
-3. Create a new Postgres database
-4. Note the connection string (will be automatically added to your environment variables)
-5. Initialize the database schema:
+1. Go to [neon.tech](https://neon.tech) and create an account
+2. Create a new project
+3. Copy the connection string (it includes `?sslmode=require` by default)
+4. Initialize the database schema:
    ```bash
-   # Connect to your Vercel Postgres database
-   psql "YOUR_VERCEL_POSTGRES_CONNECTION_STRING"
+   # Connect to your Neon database
+   psql "YOUR_NEON_CONNECTION_STRING"
    
    # Run the schema from the repository
    \i server/db/schema.sql
    ```
 
-#### Option B: Using Another PostgreSQL Provider
+#### Option B: Using Vercel Postgres
 
-1. Create a PostgreSQL database with your chosen provider
-2. Get the connection string (format: `postgresql://user:password@host:port/database`)
-3. Initialize the schema:
+1. Go to your Vercel dashboard
+2. Navigate to Storage → Create Database → Postgres
+3. Create a new Postgres database
+4. Note the connection string (automatically added to environment variables)
+5. Initialize the schema:
    ```bash
-   psql "YOUR_CONNECTION_STRING" -f server/db/schema.sql
+   psql "YOUR_VERCEL_POSTGRES_CONNECTION_STRING" -f server/db/schema.sql
    ```
 
 ### 2. Deploy to Vercel
@@ -82,22 +103,25 @@ The application has been configured to work on Vercel with the following archite
 
 ### 3. Configure Environment Variables
 
-In your Vercel project dashboard, add the following environment variables:
+In your Vercel project dashboard (Settings → Environment Variables), add:
 
 #### Required Variables:
 
-```
-DATABASE_URL=postgresql://user:password@host:port/database
-EASEE_USERNAME=your-easee-username
-EASEE_PASSWORD=your-easee-password
-NODE_ENV=production
-VERCEL=1
-```
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string with SSL | `postgresql://user:pass@host.neon.tech/db?sslmode=require` |
+| `EASEE_USERNAME` | Your Easee API username | `your-email@example.com` |
+| `EASEE_PASSWORD` | Your Easee API password | `your-password` |
+| `NODE_ENV` | Environment mode | `production` |
+| `VITE_API_URL` | Frontend API base URL | `/api` |
 
-#### Optional Variables:
+**Important Notes:**
+- For Neon: The connection string should include `?sslmode=require`
+- For Vercel Postgres: `DATABASE_URL` is automatically set when you connect the database
+- `VITE_API_URL` should be `/api` (not a full URL) to use Vercel's rewrites
+- Add variables for all environments: Production, Preview, and Development
 
-```
-PORT=3001  # Will be set automatically by Vercel
+### 4. Verify Deployment
 ```
 
 **Important**: 
@@ -125,22 +149,16 @@ This makes the frontend call the API at the same domain (e.g., `yourapp.vercel.a
 
 After deployment:
 
-1. **Check Health Endpoint**:
+1. **Check Chargers Endpoint**:
    ```bash
-   curl https://your-app.vercel.app/api/health
+   curl https://your-app.vercel.app/api/chargers
    ```
-   Should return: `{"status":"ok","timestamp":"..."}`
+   Should return: Array of charger objects
 
-2. **Check API Root**:
-   ```bash
-   curl https://your-app.vercel.app/api
-   ```
-   Should return API information with all endpoints
-
-3. **Test Frontend**:
+2. **Test Frontend**:
    Open `https://your-app.vercel.app` in your browser
 
-4. **Trigger Initial Data Update**:
+3. **Trigger Initial Data Update**:
    ```bash
    curl -X POST https://your-app.vercel.app/api/cron/update-data
    ```
@@ -161,81 +179,179 @@ The application uses Vercel Cron Jobs for automated data updates daily at 2 AM. 
 
 **Note**: Vercel Cron Jobs are only available on Pro and Enterprise plans. On the Hobby plan, you can:
 1. Manually trigger updates: `POST /api/cron/update-data`
-2. Use an external service like [cron-job.org](https://cron-job.org) to call your endpoint
+2. Use an external service like [cron-job.org](https://cron-job.org) or [GitHub Actions](https://github.com/features/actions) to call your endpoint
 3. Upgrade to Vercel Pro
 
-## Architecture Changes for Vercel
+### Alternative: GitHub Actions for Cron Jobs
 
-The following changes were made to support Vercel deployment:
+If you're on Vercel's Hobby plan, you can use GitHub Actions to trigger the data update endpoint:
 
-### 1. Serverless Function Adapter (`api/index.js`)
-```javascript
-import app from '../server/app.js';
-export default app;
+1. Create `.github/workflows/update-data.yml`:
+```yaml
+name: Update Data
+
+on:
+  schedule:
+    # Runs at 2 AM UTC daily
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger data update
+        run: |
+          curl -X POST https://your-app.vercel.app/api/cron/update-data
 ```
 
-### 2. Conditional Server Start (`server/app.js`)
-```javascript
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    // Start server only in non-serverless mode
-  });
-}
+2. Add this file to your repository and push to GitHub
+3. The workflow will run automatically on the schedule
+
+## Serverless Architecture
+
+The application has been refactored from an Express monolith to individual serverless functions:
+
+### API Functions Structure
+
+```
+api/
+├── chargers/
+│   ├── index.js          # GET /api/chargers
+│   └── [id].js           # Handles /api/chargers/:id/* endpoints
+├── prices/
+│   └── index.js          # GET /api/prices
+├── settings/
+│   └── index.js          # GET/PUT /api/settings/*
+└── cron/
+    └── update-data.js    # POST /api/cron/update-data
 ```
 
-### 3. Cron Job Endpoint (`server/routes/cron.js`)
-New endpoint for manual/scheduled data updates:
-- `POST /api/cron/update-data`
+### Shared Services
 
-### 4. Vercel Configuration (`vercel.json`)
-- Static build for frontend
-- Serverless functions for backend
-- Route rewrites
-- Cron job configuration
+Backend logic is organized in reusable services:
+- `server/services/energyService.js` - Energy data fetching and storage
+- `server/services/priceService.js` - Nord Pool price integration
+- `server/services/settingsService.js` - Settings management
+- `server/services/easeeService.js` - Easee API integration
+
+These services are imported by the serverless functions as needed.
+
+### Database Connection
+
+The database connection (`server/db/db.js`) automatically enables SSL for production:
+
+```javascript
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+```
+
+This works seamlessly with Neon, Vercel Postgres, and other managed PostgreSQL providers.
+
+## Routing Configuration
+
+Vercel uses the `rewrites` in `vercel.json` to route requests to the appropriate serverless functions:
+
+```json
+"rewrites": [
+  {
+    "source": "/api/chargers/:id/cost/export",
+    "destination": "/api/chargers/[id].js"
+  },
+  {
+    "source": "/api/chargers/:id/cost",
+    "destination": "/api/chargers/[id].js"
+  },
+  // ... more routes
+]
+```
+
+The order matters - more specific routes should come first.
+
+## Local Development
+
+For local development, you have two options:
+
+### Option 1: Using Vercel Dev (Recommended)
+
+This simulates the Vercel serverless environment locally:
+
+```bash
+# Install Vercel CLI if you haven't
+npm install -g vercel
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your credentials
+
+# Run Vercel dev server
+vercel dev
+```
+
+Access at: `http://localhost:3000`
+
+### Option 2: Traditional Separate Servers
+
+Run frontend and backend separately (for debugging):
+
+```bash
+# Terminal 1 - Backend (if using old server/app.js)
+cd server
+npm install
+npm run dev
+
+# Terminal 2 - Frontend with proxy
+cd client
+npm install
+npm run dev
+```
+
+**Note**: The traditional Express server in `server/app.js` is deprecated for Vercel deployment but can still be used locally for development.
+
+## Differences from Traditional Deployment
+
+| Aspect | Traditional Server | Vercel Serverless |
+|--------|-------------------|-------------------|
+| **Backend** | Single Express server | Individual serverless functions |
+| **Scaling** | Manual/Container orchestration | Automatic per-function |
+| **Cold Starts** | N/A (always running) | ~100-500ms initial request |
+| **State** | Can maintain in-memory state | Stateless (use database) |
+| **Cron Jobs** | node-cron in server | Vercel Cron Jobs or external |
+| **Database** | Any PostgreSQL | Must support SSL |
+| **Cost** | Fixed (server always running) | Pay per execution |
 
 ## Important Limitations & Considerations
 
 ### 1. **Serverless Function Limits**
 - **Execution Time**: Max 10 seconds (Hobby), 60 seconds (Pro), 300 seconds (Enterprise)
-- If data fetching takes longer, consider breaking it into smaller batches
+- **Memory**: Varies by plan
+- If data fetching takes longer, consider breaking into smaller operations
 
 ### 2. **No Persistent In-Memory State**
-- Each API call runs in a fresh serverless function instance
-- Easee tokens are re-authenticated per request (cached via service)
-- This is already handled by the existing code
+- Each API call runs in a fresh function instance
+- Use database or external cache (Redis) for state
+- Easee tokens are re-authenticated per request (managed by service)
 
-### 3. **Cron Jobs**
-- Only available on Pro/Enterprise plans
-- Alternative: Use external cron services to call the endpoint
+### 3. **Cold Starts**
+- First request after inactivity may take 100-500ms
+- Neon's serverless PostgreSQL minimizes database cold starts
+- Consider keeping functions warm with periodic health checks
 
 ### 4. **Database Connection Pooling**
 - Serverless functions create new connections frequently
-- Recommendation: Use connection pooling (e.g., Prisma, pg-pool)
-- Vercel Postgres includes connection pooling automatically
+- Use connection pooling or Neon's connection pooler
+- The `pg.Pool` in `server/db/db.js` handles this
 
-### 5. **Node-cron Won't Work**
-- The original node-cron job in `server/app.js` won't execute in serverless
-- It's kept for backward compatibility when running locally
-- Use Vercel Cron Jobs or external scheduling instead
+### 5. **Cron Jobs**
+- Only available on Pro/Enterprise plans
+- Alternative: GitHub Actions, AWS EventBridge, or cron-job.org
 
-## Development vs. Production
-
-### Local Development (Unchanged)
-```bash
-# Start backend
-cd server
-npm run dev
-
-# Start frontend
-cd client
-npm run dev
-```
-
-### Production on Vercel
-- Backend runs as serverless functions
-- Frontend served as static files
-- Cron jobs via Vercel Cron or external service
-- Database is external
+### 6. **CORS**
+- All serverless functions include CORS headers
+- Configured for `Access-Control-Allow-Origin: *`
+- Adjust in individual function files if needed
 
 ## Troubleshooting
 
@@ -250,16 +366,17 @@ VITE_API_URL=/api
 ### Issue: Database connection errors
 
 **Solution**: 
-1. Verify `DATABASE_URL` is set correctly
-2. Check database allows connections from Vercel IPs
-3. For Vercel Postgres, use the pooling connection string
+1. Verify `DATABASE_URL` is set correctly with SSL parameters
+2. For Neon: Ensure connection string includes `?sslmode=require`
+3. Check database allows connections from Vercel IPs (most managed services allow all by default)
+4. Verify credentials are correct
 
 ### Issue: Cron jobs not running
 
 **Solutions**:
-1. Verify you're on Pro/Enterprise plan
+1. Verify you're on Vercel Pro/Enterprise plan
 2. Check Vercel Cron Jobs dashboard for execution logs
-3. Alternative: Use external cron service to POST to `/api/cron/update-data`
+3. Alternative: Use GitHub Actions or external cron service to POST to `/api/cron/update-data`
 
 ### Issue: "Function execution timed out"
 
@@ -267,13 +384,29 @@ VITE_API_URL=/api
 1. Upgrade to Pro plan for 60-second timeout
 2. Optimize data fetching queries
 3. Break large operations into smaller batches
+4. Check if Easee or Nord Pool API is slow
 
 ### Issue: Cold starts are slow
 
 **Solution**:
-1. This is normal for serverless
-2. Consider keeping functions warm with periodic calls
-3. Upgrade to Pro for better cold start performance
+1. This is normal for serverless (~100-500ms)
+2. Use Neon's serverless PostgreSQL to minimize database cold starts
+3. Consider keeping functions warm with periodic health checks
+4. Upgrade to Pro for better cold start performance
+
+### Issue: "Cannot find module" errors
+
+**Solution**:
+1. Ensure all dependencies are in `server/package.json`
+2. Check that `installCommand` in `vercel.json` installs both client and server dependencies
+3. Verify imports use correct relative paths
+
+### Issue: CORS errors in browser
+
+**Solution**:
+1. Check that serverless functions include CORS headers
+2. Verify `VITE_API_URL` is set to `/api` (same domain)
+3. For custom domains, update CORS origin in function files
 
 ## Cost Considerations
 
