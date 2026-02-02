@@ -1,5 +1,5 @@
-import energyService from '../../../server/services/energyService.js';
-import priceService from '../../../server/services/priceService.js';
+import energyService from '../../server/services/energyService.js';
+import priceService from '../../server/services/priceService.js';
 
 /**
  * POST /api/cron/update-data
