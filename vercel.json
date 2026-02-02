@@ -3,11 +3,6 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "client/dist",
   "installCommand": "npm install --prefix client && npm install --prefix server",
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
