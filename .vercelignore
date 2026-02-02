@@ -10,9 +10,12 @@ yarn.lock
 .env.local
 .env.*.local
 
-# Build output
-dist/
-build/
+# Development build output (will be rebuilt by Vercel)
+# Don't ignore client/dist as it's needed for deployment
+server/dist/
+server/build/
+
+# Vercel
 .vercel
 
 # Development
