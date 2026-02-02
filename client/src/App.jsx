@@ -6,7 +6,7 @@ import CostSummary from './components/CostSummary';
 import DataTable from './components/DataTable';
 import PricingSettings from './components/PricingSettings';
 import ExportButton from './components/ExportButton';
-import { getChargers, getCostData } from './api';
+import { getChargers, getCostData, fetchDataManually } from './api';
 import './App.css';
 
 function App() {
@@ -23,6 +23,8 @@ function App() {
   const [error, setError] = useState(null);
   const [chartType, setChartType] = useState('line');
   const [showSettings, setShowSettings] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
+  const [fetchMessage, setFetchMessage] = useState(null);
 
   // Load chargers on mount
   useEffect(() => {
@@ -75,6 +77,42 @@ function App() {
     loadData();
   };
 
+  const handleManualFetch = async () => {
+    setFetchingData(true);
+    setFetchMessage(null);
+    
+    try {
+      console.log('Starting manual data fetch...');
+      const result = await fetchDataManually();
+      console.log('Manual fetch result:', result);
+      
+      setFetchMessage({
+        type: 'success',
+        text: 'Data fetched successfully! Refreshing display...'
+      });
+      
+      // Reload the current view after successful fetch
+      setTimeout(() => {
+        loadData();
+        setFetchMessage(null);
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Failed to fetch data manually:', err);
+      setFetchMessage({
+        type: 'error',
+        text: `Failed to fetch data: ${err.response?.data?.message || err.message}`
+      });
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => {
+        setFetchMessage(null);
+      }, 5000);
+    } finally {
+      setFetchingData(false);
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -87,7 +125,21 @@ function App() {
           <button onClick={() => setShowSettings(!showSettings)} className="btn-settings">
             ⚙️ {showSettings ? 'Hide' : 'Show'} Pricing Settings
           </button>
+          <button 
+            onClick={handleManualFetch} 
+            disabled={fetchingData}
+            className="btn-fetch-data"
+            title="Fetch latest data from Nord Pool and Easee APIs"
+          >
+            {fetchingData ? '⏳ Fetching...' : '🔄 Fetch Data Now'}
+          </button>
         </div>
+
+        {fetchMessage && (
+          <div className={`message message-${fetchMessage.type}`}>
+            {fetchMessage.text}
+          </div>
+        )}
 
         {showSettings && (
           <PricingSettings onUpdate={handlePricingUpdate} />
