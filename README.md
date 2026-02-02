@@ -18,6 +18,7 @@ cp .env.example .env
 
 - **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - Direct answer: "How can I run this application?"
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in 5 minutes
+- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** - Deploy to Vercel (serverless)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and workflows
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
 
@@ -433,7 +434,20 @@ The application includes comprehensive error handling:
 
 ## Production Deployment
 
-For production deployment:
+### Vercel (Serverless - Recommended)
+
+This application is pre-configured for Vercel deployment with serverless functions. See **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** for complete instructions.
+
+**Quick Deploy to Vercel:**
+1. Set up a PostgreSQL database (Vercel Postgres recommended)
+2. Push to GitHub/GitLab
+3. Import project on [vercel.com](https://vercel.com)
+4. Add environment variables (`DATABASE_URL`, `EASEE_USERNAME`, `EASEE_PASSWORD`, `VITE_API_URL`)
+5. Deploy!
+
+### Traditional Server Deployment
+
+For production deployment on a traditional server:
 
 1. Set `NODE_ENV=production` in `.env`
 2. Build the frontend:
