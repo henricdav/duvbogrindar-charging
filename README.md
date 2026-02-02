@@ -4,7 +4,14 @@ A fullstack application for visualizing energy consumption and costs per charger
 
 ## 🚀 Quick Start
 
-**Want to run the application immediately?** See **[QUICKSTART.md](QUICKSTART.md)** for a 5-minute setup guide!
+### Vercel Deployment (Recommended)
+
+**Deploy to Vercel in minutes:**
+See **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** for complete serverless deployment guide.
+
+### Local Development
+
+**Want to run the application locally?** See **[QUICKSTART.md](QUICKSTART.md)** for a 5-minute setup guide!
 
 **TL;DR (with Docker):**
 ```bash
@@ -16,9 +23,9 @@ cp .env.example .env
 
 ## 📚 Documentation
 
-- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - Direct answer: "How can I run this application?"
+- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** - **⭐ Deploy to Vercel (fully serverless)**
+- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - How to run locally
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in 5 minutes
-- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** - Deploy to Vercel (serverless)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and workflows
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
 
@@ -37,12 +44,14 @@ cp .env.example .env
 - **Data Visualization**: Line and bar charts for energy consumption and costs
 - **Detailed Tables**: View hourly data with energy, prices, and calculated costs
 - **Automated Data Updates**: Background cron jobs fetch data daily at 2 AM
+- **Serverless Deployment**: Runs completely on Vercel with individual serverless functions
 
 ## Technology Stack
 
 ### Backend
-- **Node.js** with Express
-- **PostgreSQL** database
+- **Vercel Serverless Functions** - Individual API endpoints (no persistent server)
+- **Node.js** with shared service layer
+- **PostgreSQL** database with SSL (Neon recommended)
 - **Easee API** integration for charger data
 - **Nord Pool API** integration for spot prices
 - **ExcelJS** for Excel file generation
