@@ -16,6 +16,7 @@ cp .env.example .env
 
 ## 📚 Documentation
 
+- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - Direct answer: "How can I run this application?"
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in 5 minutes
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and workflows
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
