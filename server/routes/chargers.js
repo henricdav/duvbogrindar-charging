@@ -93,13 +93,18 @@ router.get('/:id/cost', async (req, res) => {
     const pricingConfig = await settingsService.getPricingConfig();
 
     // Join energy and price data
+    // NOTE: Both timestamps are normalized to Europe/Stockholm timezone before truncating to hour
+    // This ensures Swedish electricity prices (which are per Swedish hour) match correctly
+    // with energy consumption data regardless of how the timestamps were originally stored
     const result = await pool.query(
       `SELECT 
         he.ts as timestamp,
         he.kwh,
         sp.price_sek_per_kwh
        FROM hourly_energy he
-       LEFT JOIN spotprices sp ON DATE_TRUNC('hour', he.ts) = DATE_TRUNC('hour', sp.ts)
+       LEFT JOIN spotprices sp ON 
+         DATE_TRUNC('hour', he.ts AT TIME ZONE 'Europe/Stockholm') = 
+         DATE_TRUNC('hour', sp.ts AT TIME ZONE 'Europe/Stockholm')
        WHERE he.charger_id = $1 AND he.ts >= $2 AND he.ts <= $3
        ORDER BY he.ts`,
       [id, fromDate, toDate]
@@ -201,13 +206,18 @@ router.get('/:id/cost/export', async (req, res) => {
     const pricingConfig = await settingsService.getPricingConfig();
 
     // Get cost data
+    // NOTE: Both timestamps are normalized to Europe/Stockholm timezone before truncating to hour
+    // This ensures Swedish electricity prices (which are per Swedish hour) match correctly
+    // with energy consumption data regardless of how the timestamps were originally stored
     const result = await pool.query(
       `SELECT 
         he.ts as timestamp,
         he.kwh,
         sp.price_sek_per_kwh
        FROM hourly_energy he
-       LEFT JOIN spotprices sp ON DATE_TRUNC('hour', he.ts) = DATE_TRUNC('hour', sp.ts)
+       LEFT JOIN spotprices sp ON 
+         DATE_TRUNC('hour', he.ts AT TIME ZONE 'Europe/Stockholm') = 
+         DATE_TRUNC('hour', sp.ts AT TIME ZONE 'Europe/Stockholm')
        WHERE he.charger_id = $1 AND he.ts >= $2 AND he.ts <= $3
        ORDER BY he.ts`,
       [id, fromDate, toDate]

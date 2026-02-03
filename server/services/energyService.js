@@ -53,12 +53,21 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
           continue;
         }
 
+        // Log first few timestamps for debugging
+        if (insertedCount < 2) {
+          console.log(`Energy data timestamp for ${chargerId}:`, {
+            original: timestamp,
+            parsed: timestampDate.toISOString(),
+            energyValue: energyValue
+          });
+        }
+
         await pool.query(
           `INSERT INTO hourly_energy (charger_id, ts, kwh) 
            VALUES ($1, $2, $3) 
            ON CONFLICT (charger_id, ts) 
            DO UPDATE SET kwh = EXCLUDED.kwh`,
-          [chargerId, timestamp, energyValue]
+          [chargerId, timestampDate.toISOString(), energyValue]
         );
         insertedCount++;
       } catch (err) {
