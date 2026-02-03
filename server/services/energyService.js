@@ -6,6 +6,14 @@ import pool from '../db/db.js';
  * @param {string} chargerId - The charger ID
  * @param {Date} fromDate - Start date
  * @param {Date} toDate - End date
+ * 
+ * Expected Easee API response format:
+ * [
+ *   { timestamp: "2024-01-15T00:00:00Z", value: 12.5 },
+ *   { timestamp: "2024-01-15T01:00:00Z", value: 15.3 },
+ *   ...
+ * ]
+ * Alternative field names: ts, kWh, energy
  */
 async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
   try {
@@ -20,23 +28,52 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
     }
 
     let insertedCount = 0;
+    let skippedCount = 0;
 
     for (const entry of energyData) {
       try {
+        // Extract timestamp - check multiple possible field names
+        const timestamp = entry.timestamp || entry.ts || entry.time || entry.date;
+        
+        // Validate that we have a timestamp
+        if (!timestamp) {
+          console.warn(`Skipping entry for ${chargerId}: missing timestamp. Entry data:`, JSON.stringify(entry));
+          skippedCount++;
+          continue;
+        }
+
+        // Extract energy value - check multiple possible field names
+        const energyValue = entry.value ?? entry.kWh ?? entry.kwh ?? entry.energy ?? 0;
+        
+        // Validate timestamp can be converted to a valid date
+        const timestampDate = new Date(timestamp);
+        if (isNaN(timestampDate.getTime())) {
+          console.warn(`Skipping entry for ${chargerId}: invalid timestamp "${timestamp}". Entry data:`, JSON.stringify(entry));
+          skippedCount++;
+          continue;
+        }
+
         await pool.query(
           `INSERT INTO hourly_energy (charger_id, ts, kwh) 
            VALUES ($1, $2, $3) 
            ON CONFLICT (charger_id, ts) 
            DO UPDATE SET kwh = EXCLUDED.kwh`,
-          [chargerId, entry.timestamp || entry.ts, entry.value || entry.kWh || 0]
+          [chargerId, timestamp, energyValue]
         );
         insertedCount++;
       } catch (err) {
         console.error(`Error inserting energy data for ${chargerId}:`, err.message);
+        console.error(`Entry data:`, JSON.stringify(entry));
+        skippedCount++;
       }
     }
 
-    console.log(`Stored ${insertedCount} energy records for charger ${chargerId}`);
+    if (skippedCount > 0) {
+      console.log(`Stored ${insertedCount} energy records for charger ${chargerId}, skipped ${skippedCount} invalid entries`);
+    } else {
+      console.log(`Stored ${insertedCount} energy records for charger ${chargerId}`);
+    }
+    
     return insertedCount;
   } catch (error) {
     console.error(`Failed to fetch and store energy for charger ${chargerId}:`, error.message);
