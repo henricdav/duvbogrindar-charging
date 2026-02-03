@@ -32,9 +32,9 @@ export default async function handler(req, res) {
     
     console.log(`Fetching data for full calendar days: ${fromDate.toISOString()} to ${toDate.toISOString()}`);
 
-    // Update spot prices
+    // Update spot prices for the same date range as energy data
     console.log('Updating spot prices...');
-    await priceService.fetchAndStorePrices();
+    await priceService.fetchAndStorePrices(fromDate, toDate);
 
     // Update energy data for all chargers
     console.log('Updating energy data...');

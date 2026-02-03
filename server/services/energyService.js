@@ -50,8 +50,11 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
 
         // Extract energy value - check multiple possible field names
         // IMPORTANT: Check if value is actually zero vs undefined
+        // Easee API uses "consumption" field - check it FIRST
         let energyValue;
-        if (entry.value !== undefined && entry.value !== null) {
+        if (entry.consumption !== undefined && entry.consumption !== null) {
+          energyValue = parseFloat(entry.consumption);
+        } else if (entry.value !== undefined && entry.value !== null) {
           energyValue = parseFloat(entry.value);
         } else if (entry.kWh !== undefined && entry.kWh !== null) {
           energyValue = parseFloat(entry.kWh);

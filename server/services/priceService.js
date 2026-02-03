@@ -63,60 +63,60 @@ async function fetchElprisetJustNuPrices(date) {
 
 /**
  * Fetch and store spot prices from elprisetjustnu.se
- * Fetches prices for today and tomorrow (if available)
+ * Fetches prices for the specified date range
+ * @param {Date} fromDate - Start date (defaults to 7 days ago)
+ * @param {Date} toDate - End date (defaults to today)
  */
-async function fetchAndStorePrices() {
+async function fetchAndStorePrices(fromDate = null, toDate = null) {
   try {
-    console.log('Fetching spot prices from elprisetjustnu.se...');
+    // Default to 7 days ago through today if not specified
+    if (!toDate) {
+      toDate = new Date();
+      toDate.setHours(23, 59, 59, 999);
+    }
+    if (!fromDate) {
+      fromDate = new Date(toDate);
+      fromDate.setDate(fromDate.getDate() - 7);
+      fromDate.setHours(0, 0, 0, 0);
+    }
+    
+    console.log(`Fetching spot prices from elprisetjustnu.se for date range: ${fromDate.toISOString().split('T')[0]} to ${toDate.toISOString().split('T')[0]}`);
     
     let insertedCount = 0;
-    const today = new Date();
     
-    // Fetch today's prices
-    const todayPrices = await fetchElprisetJustNuPrices(today);
-    
-    for (const priceData of todayPrices) {
-      try {
-        await pool.query(
-          `INSERT INTO spotprices (ts, price_sek_per_kwh) 
-           VALUES ($1, $2) 
-           ON CONFLICT (ts) 
-           DO UPDATE SET price_sek_per_kwh = EXCLUDED.price_sek_per_kwh`,
-          [priceData.timestamp.toISOString(), priceData.price]
-        );
-        insertedCount++;
-      } catch (err) {
-        console.error(`Failed to insert price for ${priceData.timestamp}:`, err.message);
-      }
-    }
-    
-    // Fetch tomorrow's prices (if available after 13:00)
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    try {
-      const tomorrowPrices = await fetchElprisetJustNuPrices(tomorrow);
+    // Loop through each date in the range
+    const currentDate = new Date(fromDate);
+    while (currentDate <= toDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      console.log(`Fetching prices for date: ${dateStr}`);
       
-      for (const priceData of tomorrowPrices) {
-        try {
-          await pool.query(
-            `INSERT INTO spotprices (ts, price_sek_per_kwh) 
-             VALUES ($1, $2) 
-             ON CONFLICT (ts) 
-             DO UPDATE SET price_sek_per_kwh = EXCLUDED.price_sek_per_kwh`,
-            [priceData.timestamp.toISOString(), priceData.price]
-          );
-          insertedCount++;
-        } catch (err) {
-          console.error(`Failed to insert price for ${priceData.timestamp}:`, err.message);
+      try {
+        const dayPrices = await fetchElprisetJustNuPrices(new Date(currentDate));
+        
+        for (const priceData of dayPrices) {
+          try {
+            await pool.query(
+              `INSERT INTO spotprices (ts, price_sek_per_kwh) 
+               VALUES ($1, $2) 
+               ON CONFLICT (ts) 
+               DO UPDATE SET price_sek_per_kwh = EXCLUDED.price_sek_per_kwh`,
+              [priceData.timestamp.toISOString(), priceData.price]
+            );
+            insertedCount++;
+          } catch (err) {
+            console.error(`Failed to insert price for ${priceData.timestamp}:`, err.message);
+          }
         }
+      } catch (error) {
+        // Some dates might not be available yet, that's OK
+        console.log(`Prices not available for ${dateStr} (might be future date)`);
       }
-    } catch (error) {
-      // Tomorrow's prices might not be available yet, that's OK
-      console.log("Tomorrow's prices not yet available (expected before 13:00)");
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    console.log(`Stored ${insertedCount} price records`);
+    console.log(`Stored ${insertedCount} price records for date range`);
     return insertedCount;
   } catch (error) {
     console.error('Failed to fetch and store prices:', error.message);
