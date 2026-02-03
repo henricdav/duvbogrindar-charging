@@ -34,11 +34,9 @@ async function fetchElprisetJustNuPrices(date) {
     
     // The API returns an array of hourly prices
     // Each entry typically has: time_start, time_end, SEK_per_kWh, EUR_per_kWh
-    // IMPORTANT: time_start is in Swedish timezone (CET/CEST), e.g., "2024-01-15T00:00:00+01:00"
-    // We need to normalize to start of hour in Swedish timezone to match energy data
     for (const entry of response.data) {
       if (entry.time_start && entry.SEK_per_kWh !== undefined) {
-        // Parse the timestamp (expected format: ISO 8601 with timezone)
+        // Parse the timestamp (expected format: ISO 8601)
         const timestamp = new Date(entry.time_start);
         const pricePerKWh = parseFloat(entry.SEK_per_kWh);
         
@@ -50,12 +48,6 @@ async function fetchElprisetJustNuPrices(date) {
         }
       }
     }
-    
-    console.log(`Sample timestamps from API:`, prices.slice(0, 2).map(p => ({
-      original: p.timestamp.toISOString(),
-      hourStart: new Date(p.timestamp.getFullYear(), p.timestamp.getMonth(), 
-                          p.timestamp.getDate(), p.timestamp.getHours()).toISOString()
-    })))
 
     console.log(`Fetched ${prices.length} price records for ${year}-${month}-${day}`);
     return prices;

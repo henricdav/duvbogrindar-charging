@@ -10,10 +10,15 @@ router.post('/update-data', async (req, res) => {
   try {
     console.log('Scheduled/manual data update triggered...');
     
-    // Fetch data for the last 7 days
+    // Fetch data for full calendar days (last 7 complete days)
     const toDate = new Date();
+    toDate.setHours(23, 59, 59, 999); // End of today
+    
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - 7);
+    fromDate.setHours(0, 0, 0, 0); // Start of 7 days ago
+    
+    console.log(`Fetching data for full calendar days: ${fromDate.toISOString()} to ${toDate.toISOString()}`);
 
     // Update spot prices
     console.log('Updating spot prices...');

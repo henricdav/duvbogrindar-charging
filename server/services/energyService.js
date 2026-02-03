@@ -32,6 +32,12 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
 
     for (const entry of energyData) {
       try {
+        // Log the first entry to see ALL available fields
+        if (insertedCount === 0) {
+          console.log(`First entry for ${chargerId} - ALL fields:`, JSON.stringify(entry, null, 2));
+          console.log(`Available field names:`, Object.keys(entry));
+        }
+        
         // Extract timestamp - check multiple possible field names
         const timestamp = entry.timestamp || entry.ts || entry.time || entry.date;
         
@@ -43,7 +49,26 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
         }
 
         // Extract energy value - check multiple possible field names
-        const energyValue = entry.value ?? entry.kWh ?? entry.kwh ?? entry.energy ?? 0;
+        // IMPORTANT: Check if value is actually zero vs undefined
+        let energyValue;
+        if (entry.value !== undefined && entry.value !== null) {
+          energyValue = parseFloat(entry.value);
+        } else if (entry.kWh !== undefined && entry.kWh !== null) {
+          energyValue = parseFloat(entry.kWh);
+        } else if (entry.kwh !== undefined && entry.kwh !== null) {
+          energyValue = parseFloat(entry.kwh);
+        } else if (entry.energy !== undefined && entry.energy !== null) {
+          energyValue = parseFloat(entry.energy);
+        } else {
+          console.warn(`Skipping entry for ${chargerId}: no energy value found in fields: ${Object.keys(entry).join(', ')}`);
+          skippedCount++;
+          continue;
+        }
+        
+        // Log if we're getting zero values
+        if (energyValue === 0 && insertedCount < 3) {
+          console.log(`WARNING: Zero energy value for ${chargerId} at ${timestamp}. Full entry:`, JSON.stringify(entry));
+        }
         
         // Validate timestamp can be converted to a valid date
         const timestampDate = new Date(timestamp);
@@ -51,15 +76,6 @@ async function fetchAndStoreEnergy(chargerId, fromDate, toDate) {
           console.warn(`Skipping entry for ${chargerId}: invalid timestamp "${timestamp}". Entry data:`, JSON.stringify(entry));
           skippedCount++;
           continue;
-        }
-
-        // Log first few timestamps for debugging
-        if (insertedCount < 2) {
-          console.log(`Energy data timestamp for ${chargerId}:`, {
-            original: timestamp,
-            parsed: timestampDate.toISOString(),
-            energyValue: energyValue
-          });
         }
 
         await pool.query(
