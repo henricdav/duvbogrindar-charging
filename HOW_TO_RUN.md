@@ -137,7 +137,7 @@ Starting the application will:
 After ~5 seconds:
 └── Initial data fetch from Easee and Nord Pool
 
-Then every 30 minutes:
+Then daily at 2 AM:
 └── Automated data updates
 ```
 

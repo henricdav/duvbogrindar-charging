@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import chargersRouter from './routes/chargers.js';
 import pricesRouter from './routes/prices.js';
 import settingsRouter from './routes/settings.js';
+import cronRouter from './routes/cron.js';
 import energyService from './services/energyService.js';
 import priceService from './services/priceService.js';
 
@@ -14,6 +15,10 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust proxy - required for rate limiting behind Vercel/proxies
+// This allows Express to trust the X-Forwarded-For header
+app.set('trust proxy', true);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -41,10 +46,24 @@ app.use((req, res, next) => {
 app.use('/api/chargers', chargersRouter);
 app.use('/api/prices', pricesRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/cron', cronRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Test IP endpoint - validates trust proxy configuration
+// Returns the client's IP address as detected by Express
+app.get('/api/test-ip', (req, res) => {
+  res.json({ 
+    ip: req.ip,
+    ips: req.ips,
+    headers: {
+      'x-forwarded-for': req.get('x-forwarded-for'),
+      'x-real-ip': req.get('x-real-ip')
+    }
+  });
 });
 
 // Root endpoint
@@ -54,13 +73,15 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
+      testIp: '/api/test-ip',
       chargers: '/api/chargers',
       energy: '/api/chargers/:id/energy?from=&to=',
       cost: '/api/chargers/:id/cost?from=&to=',
       costExport: '/api/chargers/:id/cost/export?from=&to=',
       prices: '/api/prices?from=&to=',
       settings: '/api/settings',
-      pricingConfig: '/api/settings/pricing'
+      pricingConfig: '/api/settings/pricing',
+      cronUpdate: '/api/cron/update-data (POST)'
     }
   });
 });
@@ -71,9 +92,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Cron job to update energy and price data every 30 minutes
-// This runs at 00 and 30 minutes past every hour
-cron.schedule('0,30 * * * *', async () => {
+// Cron job to update energy and price data daily at 2 AM
+// This runs at 2:00 AM every day
+// Note: Cron jobs don't work in Vercel serverless. Use Vercel Cron Jobs instead.
+// See: https://vercel.com/docs/cron-jobs
+cron.schedule('0 2 * * *', async () => {
   console.log('Running scheduled data update...');
   
   try {
@@ -96,27 +119,29 @@ cron.schedule('0,30 * * * *', async () => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('Cron job scheduled: Data updates every 30 minutes');
-  
-  // Perform initial data fetch on startup
-  setTimeout(async () => {
-    console.log('Performing initial data fetch...');
-    try {
-      const toDate = new Date();
-      const fromDate = new Date();
-      fromDate.setDate(fromDate.getDate() - 7);
+// Start server only if not in serverless environment (e.g., Vercel)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('Cron job scheduled: Data updates daily at 2 AM');
+    
+    // Perform initial data fetch on startup
+    setTimeout(async () => {
+      console.log('Performing initial data fetch...');
+      try {
+        const toDate = new Date();
+        const fromDate = new Date();
+        fromDate.setDate(fromDate.getDate() - 7);
 
-      await priceService.fetchAndStorePrices();
-      await energyService.fetchAllChargersEnergy(fromDate, toDate);
-      console.log('Initial data fetch completed');
-    } catch (error) {
-      console.error('Error during initial data fetch:', error.message);
-    }
-  }, 5000); // Wait 5 seconds after startup
-});
+        await priceService.fetchAndStorePrices();
+        await energyService.fetchAllChargersEnergy(fromDate, toDate);
+        console.log('Initial data fetch completed');
+      } catch (error) {
+        console.error('Error during initial data fetch:', error.message);
+      }
+    }, 5000); // Wait 5 seconds after startup
+  });
+}
 
 export default app;

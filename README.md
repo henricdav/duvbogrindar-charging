@@ -4,7 +4,14 @@ A fullstack application for visualizing energy consumption and costs per charger
 
 ## 🚀 Quick Start
 
-**Want to run the application immediately?** See **[QUICKSTART.md](QUICKSTART.md)** for a 5-minute setup guide!
+### Vercel Deployment (Recommended)
+
+**Deploy to Vercel in minutes:**
+See **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** for complete serverless deployment guide.
+
+### Local Development
+
+**Want to run the application locally?** See **[QUICKSTART.md](QUICKSTART.md)** for a 5-minute setup guide!
 
 **TL;DR (with Docker):**
 ```bash
@@ -16,7 +23,8 @@ cp .env.example .env
 
 ## 📚 Documentation
 
-- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - Direct answer: "How can I run this application?"
+- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** - **⭐ Deploy to Vercel (fully serverless)**
+- **[HOW_TO_RUN.md](HOW_TO_RUN.md)** - How to run locally
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in 5 minutes
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and workflows
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Detailed implementation notes
@@ -27,7 +35,7 @@ cp .env.example .env
 
 - **Real-time Energy Monitoring**: Track hourly energy consumption for 10 chargers
 - **Flexible Pricing Configuration**: 
-  - Use Nord Pool SE3 spot prices with configurable VAT and fixed costs
+  - Use Swedish electricity spot prices (SE3 - Stockholm area) with configurable VAT and fixed costs
   - Formula: Total Price = Spot Price × (1 + VAT%) + Fixed Cost per kWh
   - Or use a fully fixed price to override spot pricing
 - **Cost Calculation**: Automatic calculation of costs with customizable pricing parameters
@@ -35,15 +43,17 @@ cp .env.example .env
 - **Interactive Dashboard**: Select chargers, date ranges, and view data in multiple formats
 - **Data Visualization**: Line and bar charts for energy consumption and costs
 - **Detailed Tables**: View hourly data with energy, prices, and calculated costs
-- **Automated Data Updates**: Background cron jobs fetch data every 30 minutes
+- **Automated Data Updates**: Background cron jobs fetch data daily at 2 AM
+- **Serverless Deployment**: Runs completely on Vercel with individual serverless functions
 
 ## Technology Stack
 
 ### Backend
-- **Node.js** with Express
-- **PostgreSQL** database
+- **Vercel Serverless Functions** - Individual API endpoints (no persistent server)
+- **Node.js** with shared service layer
+- **PostgreSQL** database with SSL (Neon recommended)
 - **Easee API** integration for charger data
-- **Nord Pool API** integration for spot prices
+- **elprisetjustnu.se API** integration for Swedish electricity spot prices (SE3 area)
 - **ExcelJS** for Excel file generation
 
 ### Frontend
@@ -68,7 +78,7 @@ project/
 │   ├── services/
 │   │   ├── easeeService.js   # Easee API authentication and data fetching
 │   │   ├── energyService.js  # Energy data management
-│   │   └── priceService.js   # Nord Pool price integration
+│   │   └── priceService.js   # Electricity price integration (elprisetjustnu.se)
 │   └── db/
 │       ├── db.js        # PostgreSQL connection
 │       └── schema.sql   # Database schema and seed data
@@ -231,7 +241,7 @@ npm run dev
 
 The server will start on `http://localhost:3001`
 
-Initial data fetch will occur 5 seconds after startup, then every 30 minutes automatically.
+Initial data fetch will occur 5 seconds after startup, then daily at 2 AM automatically.
 
 ### Start the Frontend Development Server
 
@@ -360,18 +370,20 @@ The application uses Easee API to fetch charger data:
 - **Token Management**: Automatic refresh with ~1 hour expiry
 - **Data**: Hourly energy consumption in kWh
 
-### Nord Pool API
+### Electricity Price API (elprisetjustnu.se)
 
-Spot prices are fetched from Nord Pool:
+Swedish electricity spot prices are fetched from the free and open elprisetjustnu.se API:
 
-- **Endpoint**: `https://www.nordpoolgroup.com/api/marketdata/page/10`
-- **Parameters**: `currency=SEK`, `area=SE3`
-- **Data**: Hourly spot prices, converted from SEK/MWh to SEK/kWh
+- **Endpoint**: `https://www.elprisetjustnu.se/api/v1/prices/[ÅR]/[MÅNAD]-[DAG]_[PRISKLASS].json`
+- **Area**: SE3 (Stockholm / Södra Mellansverige)
+- **Data Format**: Static JSON file with hourly prices in SEK/kWh
+- **Example**: `https://www.elprisetjustnu.se/api/v1/prices/2024/01-15_SE3.json`
+- **Availability**: Today's prices always available, tomorrow's prices available after ~13:00
 
 ## Automated Data Updates
 
-The backend includes a cron job that runs every 30 minutes (at :00 and :30) to:
-1. Fetch latest spot prices from Nord Pool
+The backend includes a cron job that runs daily at 2 AM to:
+1. Fetch latest spot prices from elprisetjustnu.se (today and tomorrow)
 2. Fetch energy data for all chargers from Easee API
 3. Update the database with new data
 
@@ -433,7 +445,20 @@ The application includes comprehensive error handling:
 
 ## Production Deployment
 
-For production deployment:
+### Vercel (Serverless - Recommended)
+
+This application is pre-configured for Vercel deployment with serverless functions. See **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** for complete instructions.
+
+**Quick Deploy to Vercel:**
+1. Set up a PostgreSQL database (Vercel Postgres recommended)
+2. Push to GitHub/GitLab
+3. Import project on [vercel.com](https://vercel.com)
+4. Add environment variables (`DATABASE_URL`, `EASEE_USERNAME`, `EASEE_PASSWORD`, `VITE_API_URL`)
+5. Deploy!
+
+### Traditional Server Deployment
+
+For production deployment on a traditional server:
 
 1. Set `NODE_ENV=production` in `.env`
 2. Build the frontend:

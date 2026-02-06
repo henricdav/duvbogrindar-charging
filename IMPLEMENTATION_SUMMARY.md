@@ -16,7 +16,7 @@ A complete fullstack application for BRF Duvbo Grindar housing association to vi
 #### 1. Energy Monitoring
 - Real-time tracking of 10 chargers (EH001-EH010)
 - Hourly energy consumption data
-- Automated data fetching every 30 minutes via cron jobs
+- Automated data fetching daily at 2 AM via cron jobs
 
 #### 2. Flexible Pricing System
 **Formula**: `Total Price = Spot Price × (1 + VAT%) + Fixed Cost per kWh`

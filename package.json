@@ -1,0 +1,32 @@
+{
+  "name": "duvbogrindar-charging",
+  "version": "1.0.0",
+  "description": "BRF Duvbo Grindar Charging Portal - Fullstack application for visualizing energy consumption and costs",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "install:all": "npm run install:server && npm run install:client",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "start:server": "cd server && npm start",
+    "build:client": "cd client && npm run build",
+    "vercel-build": "cd client && npm install && npm run build"
+  },
+  "keywords": [
+    "energy",
+    "charging",
+    "easee",
+    "nordpool",
+    "react",
+    "express",
+    "postgresql"
+  ],
+  "author": "BRF Duvbo Grindar",
+  "license": "UNLICENSED"
+}

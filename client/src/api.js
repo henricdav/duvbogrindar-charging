@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -51,6 +51,16 @@ export const getPricingConfig = async () => {
 
 export const updatePricingConfig = async (config) => {
   const response = await apiClient.put('/settings/pricing', config);
+  return response.data;
+};
+
+export const fetchDataManually = async (fromDate = null, toDate = null) => {
+  const payload = {};
+  if (fromDate && toDate) {
+    payload.from = fromDate;
+    payload.to = toDate;
+  }
+  const response = await apiClient.post('/cron/update-data', payload);
   return response.data;
 };
 

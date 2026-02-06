@@ -74,6 +74,13 @@ class EaseeService {
    * @param {string} chargerId - The charger ID
    * @param {string} from - ISO timestamp for start date
    * @param {string} to - ISO timestamp for end date
+   * @returns {Array} Array of energy data entries
+   * 
+   * Expected response format from Easee API:
+   * [
+   *   { timestamp: "2024-01-15T00:00:00Z", value: 12.5 },
+   *   ...
+   * ]
    */
   async getHourlyEnergy(chargerId, from, to) {
     try {
@@ -89,7 +96,17 @@ class EaseeService {
         }
       );
 
-      return response.data;
+      const data = response.data;
+      
+      // Log the structure of the first entry to help with debugging
+      if (data && data.length > 0) {
+        console.log(`Easee API returned ${data.length} entries for charger ${chargerId}`);
+        console.log(`First entry structure:`, JSON.stringify(data[0]));
+      } else {
+        console.log(`Easee API returned empty data for charger ${chargerId}`);
+      }
+
+      return data;
     } catch (error) {
       console.error(`Failed to fetch energy data for charger ${chargerId}:`, 
         error.response?.data || error.message);
