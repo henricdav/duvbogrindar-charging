@@ -82,8 +82,8 @@ function App() {
     setFetchMessage(null);
     
     try {
-      console.log('Starting manual data fetch...');
-      const result = await fetchDataManually();
+      console.log('Starting manual data fetch for date range:', fromDate.toISOString(), 'to', toDate.toISOString());
+      const result = await fetchDataManually(fromDate.toISOString(), toDate.toISOString());
       console.log('Manual fetch result:', result);
       
       setFetchMessage({

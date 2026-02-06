@@ -54,8 +54,13 @@ export const updatePricingConfig = async (config) => {
   return response.data;
 };
 
-export const fetchDataManually = async () => {
-  const response = await apiClient.post('/cron/update-data');
+export const fetchDataManually = async (fromDate = null, toDate = null) => {
+  const payload = {};
+  if (fromDate && toDate) {
+    payload.from = fromDate;
+    payload.to = toDate;
+  }
+  const response = await apiClient.post('/cron/update-data', payload);
   return response.data;
 };
 

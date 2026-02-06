@@ -92,6 +92,8 @@ router.get('/:id/cost', async (req, res) => {
     // Get pricing configuration
     const pricingConfig = await settingsService.getPricingConfig();
 
+    console.log(`Fetching cost data for charger ${id} from ${fromDate.toISOString()} to ${toDate.toISOString()}`);
+
     // Join energy and price data
     // NOTE: Both timestamps are normalized to Europe/Stockholm timezone before truncating to hour
     // This ensures Swedish electricity prices (which are per Swedish hour) match correctly
@@ -109,6 +111,18 @@ router.get('/:id/cost', async (req, res) => {
        ORDER BY he.ts`,
       [id, fromDate, toDate]
     );
+
+    console.log(`Query returned ${result.rows.length} rows for charger ${id}`);
+    if (result.rows.length === 0) {
+      console.warn(`No data found for charger ${id} in date range ${fromDate.toISOString()} to ${toDate.toISOString()}`);
+      console.warn(`This could mean: 1) No energy data in hourly_energy table, 2) Date range doesn't match available data, 3) Charger ID mismatch`);
+    } else {
+      console.log(`Sample data (first row):`, {
+        timestamp: result.rows[0].timestamp,
+        kwh: result.rows[0].kwh,
+        price_sek_per_kwh: result.rows[0].price_sek_per_kwh
+      });
+    }
 
     // Calculate costs based on pricing configuration
     const dataWithCosts = result.rows.map(row => {
